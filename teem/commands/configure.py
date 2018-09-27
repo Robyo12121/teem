@@ -58,24 +58,23 @@ class configure(Base):
             if key in ['teem_access_key_id', 'teem_secret_access_key']:
                 current_creds[key] = self.scrub(self, value)
         try:
-            user_input['username'] = str(input(f"Teem Username [{current_creds['username']}: "))
-        except:
-            pass
+            user_input['username'] = str(input(f"Teem Username[{current_creds['username']}: "))
+        except KeyError:
+            user_input['username'] = str(input(f"Teem Username: "))
         try:
-            user_input['password'] = str(input(f"Teem Password [{current_creds['password']}]: "))
-        except:
-            pass
+            user_input['password'] = str(input(f"Teem Password[{current_creds['password']}]: "))
+        except KeyError:
+            user_input['password'] = str(input(f"Teem Password: "))
         try:
-            user_input['access_key'] = str(input(f"Access key [{current_creds['teem_access_key_id']}]: "))
-        except:
-            pass
+            user_input['access_key'] = str(input(f"Teem access key id[{current_creds['teem_access_key_id']}]: "))
+        except KeyError:
+            user_input['access_key'] = str(input(f"Access key: "))
         try:
-            user_input['secret_key'] = str(input(f"Secret key [{current_creds['teem_secret_access_key']}]: "))
-        except:
-            pass
-        print(user_input)
-
-        if not None in user_input.values():
+            user_input['secret_key'] = str(input(f"Teem secret access key[{current_creds['teem_secret_access_key']}]: "))
+        except KeyError:
+            user_input['secret_key'] = str(input(f"Teem secret access key: "))
+        
+        if not self.no_input(user_input.values()):
             #Call set_info function here
             print("Calling 'set_info' to write to creds")
         return
@@ -86,11 +85,16 @@ class configure(Base):
         for key in self.parser['default']:
             creds[key] = self.parser['default'][key]
         return creds
+        
+    def no_input(somedict):
+        for element in somedict:
+            if not element == '':
+                return False
+        return True
 
     def scrub(self, string):
         last4 = string[-4:]
         stars = '*'*14
-        
         return stars + last4
         
     def settings_files(self):
