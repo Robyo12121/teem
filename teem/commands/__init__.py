@@ -5,3 +5,4 @@ from .reservations import *
 from .reserve import *
 from .rooms import *
 from .users import *
+from .configure import *

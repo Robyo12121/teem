@@ -1,7 +1,7 @@
 #! python3.7
 import argparse
 from inspect import getmembers, isclass
-
+import commands
 """ Usage:
 
     ARGPARSE FORMAT: 'python3 script.py POSITIONAL_ARG --OPTIONAL_ARG...--OPTIONAL_ARG
@@ -37,10 +37,16 @@ from inspect import getmembers, isclass
 """
 parser = argparse.ArgumentParser(description="""Create, change and delete Teem reservations.
                                                 List reservations, users and rooms.""")
+
+##parser.add_argument("configure", help="configure credentials and cli tool settings", action=ConfigureAction)
 group1 = parser.add_mutually_exclusive_group()
 group1.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
 group1.add_argument("-q","--quiet", help="decrease output verbosity", action="store_true")
 subparsers = parser.add_subparsers(title='commands', dest='command',help="Subparser help")
+
+# CONFIGURE
+configure_parser = subparsers.add_parser('configure',help='configure credentials, profiles, settings')
+configure_parser.add_argument('-p', '--profile', action='store', type=str, help='set current profile' )
 
 # RESERVE
 reserve_parser = subparsers.add_parser('reserve', help="reserve command help")
@@ -79,22 +85,23 @@ rooms_parser = subparsers.add_parser('rooms', help="rooms command help")
 users_parser = subparsers.add_parser('users', help="users command help")
 users_parser.add_argument('-n', '--name', type=str, action='store', help='get info about a particular user')
 
-                    
 def main():
     """ 1) parse arguments
         2) match arg.command to a class in 'commands' module
         3) pass the other arguments in args into the 'run()' function
             of the class and run it."""
-    import commands
-##    args = parser.parse_args('reservations --loop'.split())
+##    args = parser.parse_args('configure'.split())
     args = parser.parse_args()
+##    print(vars(args))
     if hasattr(commands, str(args.command)):
         module = getattr(commands, str(args.command))
         module.run(module, vars(args))
+    else:
+        print(f"{args.command.capitalize()} not found! Ensure commands/__init__.py unpacks class from commands/{args.command}")
+    return args
 
 if __name__ == '__main__':
-##    args = main()
-    main()
+    args = main()
 ##    command = main()
 
 
