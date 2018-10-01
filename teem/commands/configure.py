@@ -111,9 +111,9 @@ class configure(Base):
         print("Checking if config and credentials file exist")
         if not os.path.exists(self.config_path):
             os.makedirs(self.config_path)
-        for file in self.files:
-            if not os.path.exists(file):
-                f = open(file, 'w').close()
+        for file, path in self.files.items():
+            if not os.path.exists(path):
+                f = open(path, 'w').close()
 
     def run(self, some_dict):
         self.settings_exist(self)
