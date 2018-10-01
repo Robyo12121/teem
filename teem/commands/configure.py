@@ -1,9 +1,8 @@
-import argparse
 import os
-from json import dumps
 from .base import Base
-
+import copy
 import configparser
+
 
 class configure(Base):
     """
@@ -22,70 +21,81 @@ class configure(Base):
 
     Teem configure operation:
         'py cli.py configure'
-                           ************************************
+                           
     >>>Teem Access Key ID [**************1vRt]:
     >>>Teem Secret Access Key [****************cp96]:
     >>>Teem other settings [current-setting]:
     >>> *   *   *   *   *  *  * :
     exit
-
-    input function:
-        0) Make sure files and folders exist
-        1) Get input from user, None for values not entered
-        2) If all Nones, do nothing.
-        3) If any not Nones, read file, write values
-        4) Don't bother with error checking of access keys and secret keys
-        5) Some error checking on other values that are easier
-    
     """
     home = os.environ['HOME']
     config_path = f"{home}\\.teem\\"
-    creds = f"{home}\\.teem\\credentials.ini"
-    config = f"{home}\\.teem\\config"
+    files = {'creds_file': f"{home}\\.teem\\credentials.ini",
+             'config_file': f"{home}\\.teem\\config.ini"
+             }
+    data = ['teem_username', 'teem_password', 'teem_access_key_id', 'teem_secret_access_key']
     parser = configparser.ConfigParser()
     
-    def get_info(self):
-        # 0) check if .teem exits, if .teem/config and .teem/credentials exist
-        # 0.5) check if 'teem_access_key' = <something>
-        # 0.6) check if 'teem_secret_key' = <something>
-        # 1) If first time usage of configure (ie credentials file is empty)
-        #       get credentials and settings from user
-        # 2) Make .teem file with 'config' and 'credentials' files
-        # 3) Set credentials and settings from user in those files
+    def get_user_input(self):
         user_input = {}
-        current_creds = self.load_info(self)
-        for key, value in current_creds.items():
-            if key in ['teem_access_key_id', 'teem_secret_access_key']:
-                current_creds[key] = self.scrub(self, value)
-        try:
-            user_input['username'] = str(input(f"Teem Username[{current_creds['username']}: "))
-        except KeyError:
-            user_input['username'] = str(input(f"Teem Username: "))
-        try:
-            user_input['password'] = str(input(f"Teem Password[{current_creds['password']}]: "))
-        except KeyError:
-            user_input['password'] = str(input(f"Teem Password: "))
-        try:
-            user_input['access_key'] = str(input(f"Teem access key id[{current_creds['teem_access_key_id']}]: "))
-        except KeyError:
-            user_input['access_key'] = str(input(f"Access key: "))
-        try:
-            user_input['secret_key'] = str(input(f"Teem secret access key[{current_creds['teem_secret_access_key']}]: "))
-        except KeyError:
-            user_input['secret_key'] = str(input(f"Teem secret access key: "))
-        
-        if not self.no_input(user_input.values()):
-            #Call set_info function here
-            print("Calling 'set_info' to write to creds")
-        return
+        current = {**self.get_data(self, self.files['config_file']),                   
+                   **self.get_data(self, self.files['creds_file'])}
 
-    def load_info(self):
-        self.parser.read(self.creds)
-        creds = {}
-        for key in self.parser['default']:
-            creds[key] = self.parser['default'][key]
-        return creds
+        # Obscure secret info
+        scrubbed = copy.deepcopy(current)
+        for item in self.data:
+            if item in ['teem_access_key_id', 'teem_secret_access_key', 'teem_password']:
+                try:
+                    scrubbed[item] = self.scrub(self, current[item])
+                except KeyError as k_err:
+                    pass # Log 
+
+        # Get info from user
+        for item in self.data:
+            try:
+                user_input[item] = str(input(f"{self.pretty(self, item)} [{scrubbed[item]}]: "))
+            except:
+                user_input[item] = str(input(f"{self.pretty(self, item)}: "))
+
+        # If no user input, put original value back into file
+        for k, v in user_input.items():
+            if v is '':
+                try:
+                    user_input[k] = current[k]
+                except KeyError as k_err:
+                    print(f"{k} doesn't exist")
+                    
+        return user_input
+
+    def set_info(self, some_dict):
+        """Write info contained in user_input to the creds.ini file or
+            config file.
+            1) If access key id or secret access key then write it to credentials file
+            2) Otherwise write it to config file
+        """
+        teem_creds = ('teem_access_key_id', 'teem_secret_access_key')
+        creds = {k: some_dict[k] for k in teem_creds}
+        self.write_file(self, creds, self.files['creds_file'])
+
+        other = {k: some_dict[k] for k in some_dict if k not in teem_creds}
+        self.write_file(self, other, self.files['config_file'])
+
+    def write_file(self, data_dict, file):
+        self.parser['default'] = data_dict
+        with open(file, 'w') as data:
+            self.parser.write(data)
+        return
         
+    def get_data(self, file):
+        self.parser.read(file)
+        data = {}
+        try:
+            for key in self.parser['default']:
+                data[key] = self.parser['default'][key]
+        except KeyError as k_err:
+            print("file empty")
+        return data
+    
     def no_input(somedict):
         for element in somedict:
             if not element == '':
@@ -97,24 +107,35 @@ class configure(Base):
         stars = '*'*14
         return stars + last4
         
-    def settings_files(self):
+    def settings_exist(self):
+        print("Checking if config and credentials file exist")
         if not os.path.exists(self.config_path):
             os.makedirs(self.config_path)
-        if not os.path.exists(self.creds):
-            creds_f = open(self.creds, 'w').close()
-        if not os.path.exists(self.config):
-            config_f = open(self.config, 'w').close()
+        for file in self.files:
+            if not os.path.exists(file):
+                f = open(file, 'w').close()
 
     def run(self, some_dict):
-        print("Running configure with the following options", some_dict)
-        self.settings_files(self)
-##        creds = self.load_info(self)
-##        print(creds)
-        self.get_info(self)
+        self.settings_exist(self)
+        user_input = self.get_user_input(self)
+        if not self.no_input(user_input.values()):
+            self.set_info(self, user_input)
+
+    def pretty(self, string):
+        """Take string of the form: some_string_of_some_length
+            and return it in the form Some String Of Some Length
+        """
+        lis = string.split('_')
+        new = []
+        for item in lis:
+            new.append(item.capitalize())
+        
+        return ' '.join(new)
 
 
 if __name__ == '__main__':
     conf = configure()
-    conf.get_info(conf)
+    print(conf.pretty('teem_username'))
+    print(conf.pretty('teem_access_key_id'))
     
     
