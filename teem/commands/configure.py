@@ -3,7 +3,6 @@ from .base import Base
 import copy
 import configparser
 
-
 class configure(Base):
     """
     AWS configure operation:
@@ -30,11 +29,13 @@ class configure(Base):
     """
     home = os.environ['HOME']
     config_path = f"{home}\\.teem\\"
-    files = {'creds_file': f"{home}\\.teem\\credentials.ini",
-             'config_file': f"{home}\\.teem\\config.ini"
-             }
+    files = {
+        'creds_file': f"{home}\\.teem\\credentials.ini",
+        'config_file': f"{home}\\.teem\\config.ini"
+        }
     data = ['teem_username', 'teem_password', 'teem_access_key_id', 'teem_secret_access_key']
     parser = configparser.ConfigParser()
+##    parser = CustomConfigParser
     
     def get_user_input(self):
         user_input = {}
@@ -73,7 +74,7 @@ class configure(Base):
             1) If access key id or secret access key then write it to credentials file
             2) Otherwise write it to config file
         """
-        teem_creds = ('teem_access_key_id', 'teem_secret_access_key')
+        teem_creds = ('teem_access_key_id', 'teem_secret_access_key', 'teem_username', 'teem_password')
         creds = {k: some_dict[k] for k in teem_creds}
         self.write_file(self, creds, self.files['creds_file'])
 

@@ -1,14 +1,16 @@
 from .base import Base
-from json import dumps
+from utilities import authenticate
+import requests
+
 
 class reservations(Base):
     """Make 'get reservations' function calls to Teem
         with parameters passed via CLI"""
-    
-    def get_reservations(access_token, reservation_id = None, parameters={}):
+
+    def get_reservations(access_token, reservation_id=None, parameters={}):
         """
-        Returns a dictionary of all reservations, a sigle reservation or the reservations
-        of a single room depending on the input parameters
+        Returns a dictionary of all reservations, a sigle reservation or the
+        reservations of a single room depending on the input parameters
         @ Parameter - 'access_token' - Teem access token
         @ Parameter - 'reseration_id' - Id of an individual reservation
         @ Parameter - 'parameters' - dictionary of values to modify results
@@ -23,7 +25,7 @@ class reservations(Base):
         else:
             url = base_url + reservations + str(reservation_id) + '/'
             
-        headers = {'Authorization': 'Bearer '+ access_token}
+        headers = {'Authorization': 'Bearer ' + access_token}
         
         try:
             r = requests.get(url, params=parameters, headers=headers)
@@ -48,6 +50,7 @@ class reservations(Base):
     
     def run(self, some_dict):
         print("Received the following options from command line", some_dict)
+
 
 if __name__ == '__main__':
     res = reservations(room='Showcase', loop=True, before='10:30')

@@ -2,6 +2,7 @@
 import argparse
 from inspect import getmembers, isclass
 import commands
+from utilities.parser import CustomConfigParser
 """ Usage:
 
     ARGPARSE FORMAT: 'python3 script.py POSITIONAL_ARG --OPTIONAL_ARG...--OPTIONAL_ARG
@@ -97,7 +98,8 @@ def main():
         module = getattr(commands, str(args.command))
         module.run(module, vars(args))
     else:
-        print(f"{args.command.capitalize()} not found! Ensure commands/__init__.py unpacks class from commands/{args.command}")
+        pass
+        #print(f"{args.command.capitalize()} not found! Ensure commands/__init__.py unpacks class from commands/{args.command}")
     return args
 
 if __name__ == '__main__':
