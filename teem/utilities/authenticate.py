@@ -27,7 +27,6 @@ def load_credentials():
 def obtain_token(client_id, client_secret, username, password, token_url, scope):
     """Inputs: Access key, Secret key, username, password, authentication URL, scope
         Outputs: dictionary containing access token and refresh token"""
-    print("obtaining...")
     oauth = OAuth2Session(client=LegacyApplicationClient(client_id=client_id, scope = scope))
     token = oauth.fetch_token(token_url=token_url,
                           username=username,

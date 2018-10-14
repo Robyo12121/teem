@@ -77,6 +77,7 @@ reservations_parser.add_argument('-r','--room', type=str, action='store', help='
 reservations_parser.add_argument('-l','--loop', action='store_true', help='continuously update reservations list')
 reservations_parser.add_argument('-b','--before', action='store', type=str, help='filter results before specified time')
 reservations_parser.add_argument('-a','--after', action='store', type=str, help='continuously update reservations list')
+reservations_parser.add_argument('--reservation', action='store', type=str, help='specifiy a specific reservation id')
 
 # ROOMS
 rooms_parser = subparsers.add_parser('rooms', help="rooms command help")
@@ -91,15 +92,15 @@ def main():
         2) match arg.command to a class in 'commands' module
         3) pass the other arguments in args into the 'run()' function
             of the class and run it."""
-##    args = parser.parse_args('configure'.split())
     args = parser.parse_args()
-##    print(vars(args))
+    if args.command is None:
+        args = parser.parse_args('-h')
     if hasattr(commands, str(args.command)):
         module = getattr(commands, str(args.command))
         module.run(module, vars(args))
     else:
-        pass
-        #print(f"{args.command.capitalize()} not found! Ensure commands/__init__.py unpacks class from commands/{args.command}")
+        if args.command is not None:
+            print(f"{args.command.capitalize()} not found! Ensure commands/__init__.py unpacks class from commands/{args.command}")
     return args
 
 if __name__ == '__main__':
