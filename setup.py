@@ -18,7 +18,7 @@ setup(
     url = None,
     author = 'Robin Staunton-Collins',
     author_email = 'robinstauntoncollins@gmail.com',
-    license = 'GNU GPLv3',
+    license = 'The Unlicense',
     classifiers= [
         'Indended Audience :: Users',
         'Topic :: Utilities',
